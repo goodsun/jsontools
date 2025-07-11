@@ -99,6 +99,24 @@
             color: #28a745;
             font-weight: bold;
         }
+        
+        .footer {
+            text-align: center;
+            padding: 20px 0;
+            margin-top: 40px;
+            border-top: 1px solid #e9ecef;
+            color: #6c757d;
+            font-size: 14px;
+        }
+        
+        .footer a {
+            color: #007aff;
+            text-decoration: none;
+        }
+        
+        .footer a:hover {
+            text-decoration: underline;
+        }
     </style>
 </head>
 <body>
@@ -106,38 +124,42 @@
         <h1>JSON Tools</h1>
         
         <div class="tools-grid">
-            <a href="json-clipboard-viewer.html" class="tool-card">
-                <h3 class="tool-title">JSON Clipboard Viewer</h3>
+            <a href="json-formatter.html" class="tool-card">
+                <h3 class="tool-title">JSON Formatter</h3>
                 <p class="tool-description">
-                    JSONデータを解析してテーブル形式で表示。各項目を個別にクリップボードへコピーできます。
+                    JSONを整形してソート・空白値除去などの加工ができます。各値をクリックでコピー可能。
                 </p>
                 <div class="tool-features">
                     <h4>主な機能</h4>
                     <ul class="feature-list">
-                        <li>シンプルなテーブル表示</li>
-                        <li>各項目のワンクリックコピー</li>
-                        <li>配列・オブジェクト対応</li>
-                        <li>エラーハンドリング</li>
+                        <li>ラベルソート機能</li>
+                        <li>空白値除去オプション</li>
+                        <li>シンタックスハイライト</li>
+                        <li>値クリックでコピー</li>
                     </ul>
                 </div>
             </a>
             
-            <a href="json-pretty-viewer.html" class="tool-card">
-                <h3 class="tool-title">JSON Pretty Viewer</h3>
+            <a href="json-hierarchy-viewer.html" class="tool-card">
+                <h3 class="tool-title">JSON Hierarchy Viewer</h3>
                 <p class="tool-description">
-                    JSONを整形して見やすく表示。値部分をクリックするだけでコピーできる直感的なインターフェース。
+                    JSONの階層構造を美しく表示。各値をクリックで個別コピー、キーをクリックで階層全体をコピー可能。
                 </p>
                 <div class="tool-features">
                     <h4>主な機能</h4>
                     <ul class="feature-list">
+                        <li>階層構造の可視化</li>
+                        <li>値クリックで個別コピー</li>
+                        <li>キークリックで階層コピー</li>
                         <li>シンタックスハイライト</li>
-                        <li>値クリックでコピー</li>
-                        <li>整形された表示</li>
-                        <li>コピー時のフィードバック</li>
                     </ul>
                 </div>
             </a>
         </div>
+        
+        <footer class="footer">
+            Copyright 2025 <a href="https://github.com/goodsun/jsontools" target="_blank">goodsun</a> all rights reserved
+        </footer>
     </div>
 </body>
 </html>

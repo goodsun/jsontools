@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JSON Formatter - Label Sort & Empty Value Removal</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        
+        .container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 24px;
+        }
+        
+        textarea {
+            width: 100%;
+            min-height: 150px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 13px;
+            resize: vertical;
+            margin-bottom: 10px;
+        }
+        
+        .options-group {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 15px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+            align-items: center;
+        }
+        
+        .option {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .option label {
+            font-size: 14px;
+            color: #333;
+            cursor: pointer;
+        }
+        
+        input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+        }
+        
+        .button-group {
+            margin-bottom: 20px;
+        }
+        
+        button {
+            background-color: #007aff;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            font-size: 14px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        
+        button:hover {
+            background-color: #0056b3;
+        }
+        
+        .clear-button {
+            background-color: #dc3545;
+        }
+        
+        .clear-button:hover {
+            background-color: #c82333;
+        }
+        
+        .json-viewer {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 4px;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            overflow-x: auto;
+            white-space: pre-wrap;
+        }
+        
+        .json-key {
+            color: #d73a49;
+            font-weight: 600;
+            cursor: pointer;
+            padding: 2px 4px;
+            margin: -2px -4px;
+            border-radius: 3px;
+            transition: background-color 0.2s;
+        }
+        
+        .json-key:hover {
+            background-color: #ffe8e8;
+        }
+        
+        .json-string {
+            color: #032f62;
+            cursor: pointer;
+            position: relative;
+            padding: 2px 4px;
+            margin: -2px -4px;
+            border-radius: 3px;
+            transition: background-color 0.2s;
+        }
+        
+        .json-string:hover {
+            background-color: #e3f2fd;
+        }
+        
+        .json-number {
+            color: #005cc5;
+            cursor: pointer;
+            padding: 2px 4px;
+            margin: -2px -4px;
+            border-radius: 3px;
+            transition: background-color 0.2s;
+        }
+        
+        .json-number:hover {
+            background-color: #e3f2fd;
+        }
+        
+        .json-boolean {
+            color: #e36209;
+            cursor: pointer;
+            padding: 2px 4px;
+            margin: -2px -4px;
+            border-radius: 3px;
+            transition: background-color 0.2s;
+        }
+        
+        .json-boolean:hover {
+            background-color: #e3f2fd;
+        }
+        
+        .json-null {
+            color: #6f42c1;
+            cursor: pointer;
+            padding: 2px 4px;
+            margin: -2px -4px;
+            border-radius: 3px;
+            transition: background-color 0.2s;
+        }
+        
+        .json-null:hover {
+            background-color: #e3f2fd;
+        }
+        
+        .json-brace {
+            color: #6a737d;
+            font-weight: 600;
+        }
+        
+        .error-message {
+            background-color: #f8d7da;
+            color: #721c24;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 10px;
+            display: none;
+            font-size: 14px;
+        }
+        
+        .empty-state {
+            text-align: center;
+            color: #6c757d;
+            padding: 40px;
+        }
+        
+        .copy-tooltip {
+            position: fixed;
+            background-color: #333;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s;
+            z-index: 1000;
+        }
+        
+        .copy-tooltip.show {
+            opacity: 1;
+        }
+        
+        .header {
+            background-color: #e9ecef;
+            color: #333;
+            padding: 10px 0;
+            margin: -20px -20px 20px -20px;
+            border-radius: 8px 8px 0 0;
+            border-bottom: 1px solid #dee2e6;
+        }
+        
+        .header-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+        }
+        
+        .header-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin: 0;
+        }
+        
+        .nav-link {
+            color: #007aff;
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            font-size: 14px;
+            transition: background-color 0.2s;
+        }
+        
+        .nav-link:hover {
+            background-color: #e9ecef;
+            text-decoration: none;
+            color: #0056b3;
+        }
+        
+        .footer {
+            text-align: center;
+            padding: 20px 0;
+            margin-top: 40px;
+            border-top: 1px solid #e9ecef;
+            color: #6c757d;
+            font-size: 14px;
+        }
+        
+        .footer a {
+            color: #007aff;
+            text-decoration: none;
+        }
+        
+        .footer a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <nav class="header-nav">
+                <h1 class="header-title">JSON Formatter</h1>
+                <a href="index.html" class="nav-link">← メニューに戻る</a>
+            </nav>
+        </header>
+        
+        <div>
+            <textarea id="jsonInput" placeholder="JSONを入力してください..."></textarea>
+            
+            <div class="options-group">
+                <div class="option">
+                    <input type="checkbox" id="sortKeys" checked>
+                    <label for="sortKeys">ラベルをソート</label>
+                </div>
+                <div class="option">
+                    <input type="checkbox" id="removeEmpty">
+                    <label for="removeEmpty">空白値の項目を除去</label>
+                </div>
+            </div>
+            
+            <div class="button-group">
+                <button onclick="formatJSON()">整形表示</button>
+                <button onclick="copyAllFormatted(event)">全体をコピー</button>
+                <button class="clear-button" onclick="clearAll()">クリア</button>
+            </div>
+            <div id="errorMessage" class="error-message"></div>
+        </div>
+        
+        <div id="jsonOutput" class="empty-state">
+            JSONを入力して「整形表示」ボタンをクリックしてください
+        </div>
+        
+        <footer class="footer">
+            Copyright 2025 <a href="https://github.com/goodsun/jsontools" target="_blank">goodsun</a> all rights reserved
+        </footer>
+    </div>
+    
+    <div id="copyTooltip" class="copy-tooltip">コピーしました</div>
+
+    <script>
+        let tooltip = document.getElementById('copyTooltip');
+        let originalData = null;
+        let processedData = null;
+        
+        function isEmpty(value) {
+            if (value === null || value === undefined) return true;
+            if (typeof value === 'string') return value.trim() === '';
+            if (Array.isArray(value)) return value.length === 0;
+            if (typeof value === 'object') return Object.keys(value).length === 0;
+            return false;
+        }
+        
+        function removeEmptyValues(obj) {
+            if (Array.isArray(obj)) {
+                return obj
+                    .map(item => removeEmptyValues(item))
+                    .filter(item => !isEmpty(item));
+            } else if (obj !== null && typeof obj === 'object') {
+                const result = {};
+                for (const [key, value] of Object.entries(obj)) {
+                    if (!isEmpty(value)) {
+                        const processedValue = removeEmptyValues(value);
+                        if (!isEmpty(processedValue)) {
+                            result[key] = processedValue;
+                        }
+                    }
+                }
+                return result;
+            }
+            return obj;
+        }
+        
+        function sortObjectKeys(obj) {
+            if (Array.isArray(obj)) {
+                return obj.map(item => sortObjectKeys(item));
+            } else if (obj !== null && typeof obj === 'object') {
+                const result = {};
+                const sortedKeys = Object.keys(obj).sort();
+                for (const key of sortedKeys) {
+                    result[key] = sortObjectKeys(obj[key]);
+                }
+                return result;
+            }
+            return obj;
+        }
+        
+        function formatJSON() {
+            const input = document.getElementById('jsonInput').value;
+            const output = document.getElementById('jsonOutput');
+            const errorDiv = document.getElementById('errorMessage');
+            const sortKeys = document.getElementById('sortKeys').checked;
+            const removeEmpty = document.getElementById('removeEmpty').checked;
+            
+            errorDiv.style.display = 'none';
+            errorDiv.textContent = '';
+            
+            if (!input.trim()) {
+                showError('JSONを入力してください');
+                return;
+            }
+            
+            try {
+                originalData = JSON.parse(input);
+                processedData = originalData;
+                
+                if (removeEmpty) {
+                    processedData = removeEmptyValues(processedData);
+                }
+                
+                if (sortKeys) {
+                    processedData = sortObjectKeys(processedData);
+                }
+                
+                const formatted = createInteractiveJSON(processedData);
+                output.className = 'json-viewer';
+                output.innerHTML = '';
+                output.appendChild(formatted);
+            } catch (e) {
+                showError('無効なJSON形式です: ' + e.message);
+            }
+        }
+        
+        function createInteractiveJSON(data, indent = '') {
+            const container = document.createElement('span');
+            
+            if (data === null) {
+                const span = createClickableSpan('null', 'json-null', null);
+                container.appendChild(span);
+            } else if (typeof data === 'boolean') {
+                const span = createClickableSpan(String(data), 'json-boolean', data);
+                container.appendChild(span);
+            } else if (typeof data === 'number') {
+                const span = createClickableSpan(String(data), 'json-number', data);
+                container.appendChild(span);
+            } else if (typeof data === 'string') {
+                const span = createClickableSpan(JSON.stringify(data), 'json-string', data);
+                container.appendChild(span);
+            } else if (Array.isArray(data)) {
+                container.appendChild(createSpan('[', 'json-brace'));
+                
+                if (data.length > 0) {
+                    const nextIndent = indent + '  ';
+                    data.forEach((item, index) => {
+                        if (index > 0) {
+                            container.appendChild(createSpan(',', 'json-brace'));
+                        }
+                        container.appendChild(document.createTextNode('\n' + nextIndent));
+                        container.appendChild(createInteractiveJSON(item, nextIndent));
+                    });
+                    container.appendChild(document.createTextNode('\n' + indent));
+                }
+                container.appendChild(createSpan(']', 'json-brace'));
+            } else if (typeof data === 'object') {
+                container.appendChild(createSpan('{', 'json-brace'));
+                
+                const entries = Object.entries(data);
+                if (entries.length > 0) {
+                    const nextIndent = indent + '  ';
+                    entries.forEach(([key, value], index) => {
+                        if (index > 0) {
+                            container.appendChild(createSpan(',', 'json-brace'));
+                        }
+                        container.appendChild(document.createTextNode('\n' + nextIndent));
+                        
+                        const keySpan = createClickableSpan(JSON.stringify(key), 'json-key', value, true);
+                        container.appendChild(keySpan);
+                        
+                        container.appendChild(createSpan(': ', 'json-brace'));
+                        container.appendChild(createInteractiveJSON(value, nextIndent));
+                    });
+                    container.appendChild(document.createTextNode('\n' + indent));
+                }
+                container.appendChild(createSpan('}', 'json-brace'));
+            }
+            
+            return container;
+        }
+        
+        function createSpan(text, className) {
+            const span = document.createElement('span');
+            span.className = className;
+            span.textContent = text;
+            return span;
+        }
+        
+        function createClickableSpan(text, className, actualValue, isComplexValue = false) {
+            const span = document.createElement('span');
+            span.className = className;
+            span.textContent = text;
+            
+            span.addEventListener('click', async function(e) {
+                try {
+                    let copyValue;
+                    if (isComplexValue) {
+                        copyValue = JSON.stringify(actualValue, null, 2);
+                    } else {
+                        copyValue = typeof actualValue === 'string' ? actualValue : String(actualValue);
+                    }
+                    await navigator.clipboard.writeText(copyValue);
+                    showCopyTooltip(e.pageX, e.pageY);
+                } catch (err) {
+                    showError('クリップボードへのコピーに失敗しました');
+                }
+            });
+            
+            return span;
+        }
+        
+        function showCopyTooltip(x, y) {
+            tooltip.style.left = x + 'px';
+            tooltip.style.top = (y - 30) + 'px';
+            tooltip.classList.add('show');
+            
+            setTimeout(() => {
+                tooltip.classList.remove('show');
+            }, 1500);
+        }
+        
+        function clearAll() {
+            document.getElementById('jsonInput').value = '';
+            document.getElementById('jsonOutput').className = 'empty-state';
+            document.getElementById('jsonOutput').innerHTML = 'JSONを入力して「整形表示」ボタンをクリックしてください';
+            document.getElementById('errorMessage').style.display = 'none';
+            originalData = null;
+            processedData = null;
+        }
+        
+        function showError(message) {
+            const errorDiv = document.getElementById('errorMessage');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+        }
+        
+        async function copyAllFormatted(event) {
+            if (!processedData) {
+                showError('整形されたJSONがありません。まず「整形表示」ボタンをクリックしてください');
+                return;
+            }
+            
+            try {
+                const formattedJSON = JSON.stringify(processedData, null, 2);
+                await navigator.clipboard.writeText(formattedJSON);
+                const button = event.target;
+                const rect = button.getBoundingClientRect();
+                showCopyTooltip(rect.left + rect.width / 2, rect.top);
+            } catch (err) {
+                console.error('Copy error:', err);
+                showError('クリップボードへのコピーに失敗しました');
+            }
+        }
+        
+        document.getElementById('jsonInput').addEventListener('keydown', function(e) {
+            if (e.ctrlKey && e.key === 'Enter') {
+                formatJSON();
+            }
+        });
+    </script>
+</body>
+</html>
