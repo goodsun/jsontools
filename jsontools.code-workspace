@@ -1,0 +1,28 @@
+{
+	"folders": [
+		{
+			"path": "."
+		}
+	],
+	"settings": {
+		"editor.tabSize": 2,
+		"editor.insertSpaces": true,
+		"editor.detectIndentation": false,
+		"files.exclude": {
+			"**/.git": true,
+			"**/.DS_Store": true,
+			"**/node_modules": true
+		},
+		"editor.formatOnSave": true,
+		"html.format.indentInnerHtml": true,
+		"html.format.preserveNewLines": false
+	},
+	"extensions": {
+		"recommendations": [
+			"ms-vscode.vscode-json",
+			"bradlc.vscode-tailwindcss",
+			"formulahendry.auto-rename-tag",
+			"ms-vscode.live-server"
+		]
+	}
+}

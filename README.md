@@ -6,6 +6,17 @@ JSONデータを効率的に操作・閲覧するためのWebベースツール�
 
 JSON Toolsは、JSONデータの整形、階層表示、値の選択的コピーなどを行うためのシンプルなWebアプリケーションです。ブラウザで動作し、インストール不要で利用できます。
 
+## オンライン版
+
+GitHub Pagesでホストされているオンライン版を利用できます：
+
+**メインページ**: https://goodsun.github.io/jsontools/
+
+### 直接リンク
+- [JSON Formatter](https://goodsun.github.io/jsontools/json-formatter.html) - JSONの整形・加工
+- [JSON Hierarchy Viewer](https://goodsun.github.io/jsontools/json-hierarchy-viewer.html) - 階層構造の可視化
+- [XPath Researcher](https://goodsun.github.io/jsontools/xpath-researcher.html) - XPath抽出テスト
+
 ## ツール一覧
 
 ### 1. JSON Formatter
@@ -51,6 +62,43 @@ JSONの階層構造を美しく表示し、階層単位でのコピーが可能�
 #### キーボードショートカット
 - `Ctrl + Enter`: 整形実行
 
+### 3. XPath Researcher
+**ファイル**: `xpath-researcher.html`
+
+HTMLソースからXPathを使用して要素を抽出・検証するツールです。スクレイピング前のXPathテストに最適です。
+
+#### 主な機能
+- **URL自動取得**: URLを入力してHTMLソースを自動取得（CORSプロキシ使用）
+- **XPathによる要素抽出**: 複数のXPathを一括実行して結果を表示
+- **インライン編集**: XPath列を直接編集してリアルタイムで結果を更新
+- **JSON同期**: XPathを編集すると元のJSON設定も自動更新
+- **抽出結果のコピー**: 各抽出結果をクリックでコピー可能
+- **エラーハンドリング**: XPath構文エラーや取得エラーの詳細表示
+
+#### 使用方法
+1. URLを入力して「HTML取得」ボタンをクリック、またはHTMLソースを直接貼り付け
+2. XPath設定をJSON形式で入力（サンプル読み込み機能あり）
+3. 「XPath抽出実行」ボタンをクリック
+4. 結果テーブルでXPathを直接編集してリアルタイムテスト
+5. 抽出結果をクリックしてクリップボードにコピー
+
+#### XPath設定例（求人サイト向け）
+```json
+{
+    "facility_name": "//dt[contains(text(),'施設名')]/following-sibling::dd[1]",
+    "price": "//dt[contains(text(),'給与')]/following-sibling::dd[1]",
+    "occupation": "//dt[contains(text(),'職種')]/following-sibling::dd[1]",
+    "access": "//dt[contains(text(),'アクセス')]/following-sibling::dd[1]"
+}
+```
+
+#### キーボードショートカット
+- `Ctrl + Enter`: XPath抽出実行
+
+#### 制約事項
+- CORS制約により一部のサイトはURL取得できません
+- その場合はHTMLソースを手動でコピー&ペーストしてください
+
 ## 技術仕様
 
 ### 対応ブラウザ
@@ -62,6 +110,7 @@ JSONの階層構造を美しく表示し、階層単位でのコピーが可能�
 ### 必要な機能
 - JavaScript有効
 - Clipboard API対応（コピー機能のため）
+- XPath対応（XPath Researcherのため）
 
 ### セキュリティ
 - 完全にクライアントサイドで動作
@@ -70,14 +119,19 @@ JSONの階層構造を美しく表示し、階層単位でのコピーが可能�
 
 ## インストール・使用方法
 
+### 推奨：オンライン版の利用
+GitHub Pagesでホストされているオンライン版を使用することを推奨します：
+- **URL**: https://goodsun.github.io/jsontools/
+- **利点**: インストール不要、常に最新版、高速アクセス
+
+### ローカルでの利用
+1. リポジトリをクローンまたはダウンロード
+2. `index.html`をブラウザで直接開く
+
 ### Webサーバーでの利用
 1. リポジトリをクローンまたはダウンロード
 2. WebサーバーのDocumentRootに配置
 3. ブラウザで`index.html`にアクセス
-
-### ローカルでの利用
-1. リポジトリをダウンロード
-2. `index.html`をブラウザで直接開く
 
 ## ファイル構成
 
@@ -86,6 +140,12 @@ jsontools/
 ├── index.html                    # メインページ（ツール選択）
 ├── json-formatter.html           # JSON整形ツール
 ├── json-hierarchy-viewer.html    # JSON階層ビューアー
+├── xpath-researcher.html         # XPath研究ツール
+├── docs/
+│   ├── index.md                  # メインページ仕様書
+│   ├── json_formatter.md         # JSON Formatter仕様書
+│   ├── json_hierarchy_viewer.md  # JSON Hierarchy Viewer仕様書
+│   └── xpath_researcher.md       # XPath Researcher仕様書
 ├── README.md                     # このファイル
 └── LICENSE                       # ライセンス
 ```
@@ -101,7 +161,9 @@ jsontools/
 - **2025年**: 初期リリース
   - JSON Formatter機能実装
   - JSON Hierarchy Viewer機能実装
+  - XPath Researcher機能実装
   - 統一されたUI/UXデザイン
+  - インライン編集とリアルタイム更新機能
 
 ## ライセンス
 
