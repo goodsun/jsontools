@@ -8,13 +8,32 @@
 設定jsonにはxpathが記述されている。
 
 例：
-
 {
-    "title_original": "//p[@class='ichiran_t_d_name']",
-    "name": "//p[@class='ichiran_t_d_name']",
-    "price": "//dl[@class='ichiran_t_tabel']/dt[contains(text(),'給与')]/following-sibling::dd[1]",
-    "area": "//dl[@class='ichiran_t_tabel']/dt[contains(text(),'勤務地')]/following-sibling::dd[1]",
-    "occupation": "//*[@id='pctop']/header/div/h1"
+    "access": "//dt[contains(text(),'アクセス')]/following-sibling::dd[1]",
+    "bonus": "//dt[contains(text(),'賞与')]/following-sibling::dd[1]",
+    "city": "//dt[contains(text(),'所在地')]/following-sibling::dd[1]",
+    "contract": "//dt[contains(text(),'雇用形態')]/following-sibling::dd[1]",
+    "dept": "//dt[contains(text(),'診療科目')]/following-sibling::dd[1]",
+    "detail": "//dt[contains(text(),'概要')]/following-sibling::dd[1]",
+    "facility_name": "//dt[contains(text(),'施設名')]/following-sibling::dd[1]",
+    "facility_type": "//dt[contains(text(),'施設形態')]/following-sibling::dd[1]",
+    "holiday": "//dt[contains(text(),'休日')]/following-sibling::dd[1]",
+    "license": "//dt[contains(text(),'資格')]/following-sibling::dd[1]",
+    "line": "//dt[text()='勤務地/アクセス']/following-sibling::dd[1]",
+    "name": "//title",
+    "occupation": "//dt[contains(text(),'職種')]/following-sibling::dd[1]",
+    "position": "//dt[contains(text(),'担当部署')]/following-sibling::dd[1]",
+    "prefecture": "//dt[contains(text(),'所在地')]/following-sibling::dd[1]",
+    "price": "//dt[contains(text(),'給与')]/following-sibling::dd[1]",
+    "required_skill": "//dt[contains(text(),'応募資格')]/following-sibling::dd[1]",
+    "staff_comment": "//p[contains(text(),'コメント')]",
+    "staff_comment_title": "//p[contains(text(),'コメント')]/following-sibling::p",
+    "station": "//dt[contains(text(),'最寄駅')]/following-sibling::dd[1]",
+    "test_period": "//dt[contains(text(),'試用期間')]/following-sibling::dd[1]",
+    "title_original": "//title",
+    "welfare_program": "//dt[contains(text(),'福利厚生')]/following-sibling::dd[1]",
+    "working_hours": "//dt[contains(text(),'勤務時間')]/following-sibling::dd[1]",
+    "working_style": "//dt[contains(text(),'勤務形態')]/following-sibling::dd[1]"
 }
 
 対象URLのページから各xPathで取得できる値を表示したい。
