@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JSON Diff Viewer</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 24px;
+        }
+        .input-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .input-box {
+            background: #f8f9fa;
+            border-radius: 4px;
+            padding: 15px;
+            border: 1px solid #e9ecef;
+        }
+        .input-box h3 {
+            margin-top: 0;
+            color: #555;
+        }
+        textarea {
+            width: 100%;
+            height: 300px;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 13px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 10px;
+            box-sizing: border-box;
+            resize: vertical;
+        }
+        .button-section {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            font-size: 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .result-section {
+            background: #f8f9fa;
+            border-radius: 4px;
+            padding: 15px;
+            border: 1px solid #e9ecef;
+            min-height: 200px;
+        }
+        .result-section h3 {
+            margin-top: 0;
+            color: #555;
+        }
+        .summary {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 15px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+        .summary-item {
+            display: inline-block;
+            margin-right: 20px;
+        }
+        .summary-count {
+            font-weight: bold;
+        }
+        #diff-result {
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 13px;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            background: white;
+            padding: 15px;
+            border-radius: 4px;
+            border: 1px solid #e9ecef;
+        }
+        .diff-added {
+            background-color: #e6ffed;
+            color: #24292e;
+            display: inline;
+            padding: 0 2px;
+        }
+        .diff-removed {
+            background-color: #ffeef0;
+            color: #24292e;
+            display: inline;
+            padding: 0 2px;
+        }
+        .diff-modified {
+            background-color: #fff5b1;
+            color: #24292e;
+            display: inline;
+            padding: 0 2px;
+        }
+        .diff-unchanged {
+            color: #666;
+            display: inline;
+            padding: 0 2px;
+        }
+        .diff-line {
+            display: block;
+            padding: 2px 0;
+            margin: 0;
+            border-left: 3px solid transparent;
+        }
+        .diff-line-added {
+            border-left-color: #28a745;
+        }
+        .diff-line-removed {
+            border-left-color: #d73a49;
+        }
+        .diff-line-modified {
+            border-left-color: #f9c513;
+        }
+        .error {
+            color: #d73a49;
+            background-color: #ffeef0;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 10px;
+        }
+        .legend {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+        }
+        .legend-added { background-color: #e6ffed; border: 1px solid #28a745; }
+        .legend-removed { background-color: #ffeef0; border: 1px solid #d73a49; }
+        .legend-modified { background-color: #fff5b1; border: 1px solid #f9c513; }
+        @media (max-width: 768px) {
+            .input-section {
+                grid-template-columns: 1fr;
+            }
+        }
+        .header {
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 8px 8px 0 0;
+            margin: -20px -20px 20px -20px;
+        }
+        
+        .header-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+        }
+        
+        .header-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin: 0;
+        }
+        
+        .nav-link {
+            color: #007aff;
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            font-size: 14px;
+            transition: background-color 0.2s;
+        }
+        
+        .nav-link:hover {
+            background-color: #e9ecef;
+            text-decoration: none;
+            color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <nav class="header-nav">
+                <h1 class="header-title">JSON Diff Viewer</h1>
+                <a href="index.html" class="nav-link">← メニューに戻る</a>
+            </nav>
+        </header>
+        
+        <div class="input-section">
+            <div class="input-box">
+                <h3>元のJSON (Before)</h3>
+                <textarea id="json1" placeholder='{"key": "value"}'></textarea>
+            </div>
+            <div class="input-box">
+                <h3>比較するJSON (After)</h3>
+                <textarea id="json2" placeholder='{"key": "modified value"}'></textarea>
+            </div>
+        </div>
+        
+        <div class="button-section">
+            <button onclick="compareJSON()">差分を表示 (Show Diff)</button>
+        </div>
+        
+        <div class="result-section">
+            <h3>差分結果 (Diff Result)</h3>
+            <div id="summary"></div>
+            <div class="legend">
+                <div class="legend-item">
+                    <div class="legend-color legend-added"></div>
+                    <span>追加 (Added)</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color legend-removed"></div>
+                    <span>削除 (Removed)</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color legend-modified"></div>
+                    <span>変更 (Modified)</span>
+                </div>
+            </div>
+            <div id="diff-result">ここに差分が表示されます (Differences will be displayed here)</div>
+        </div>
+    </div>
+
+    <script>
+        function compareJSON() {
+            const json1Input = document.getElementById('json1').value;
+            const json2Input = document.getElementById('json2').value;
+            const resultDiv = document.getElementById('diff-result');
+            const summaryDiv = document.getElementById('summary');
+            
+            try {
+                const obj1 = JSON.parse(json1Input);
+                const obj2 = JSON.parse(json2Input);
+                
+                const diffMap = createDiffMap(obj1, obj2);
+                const summary = createSummary(diffMap);
+                const html = renderJSONWithDiff(obj1, obj2, diffMap);
+                
+                summaryDiv.innerHTML = summary;
+                resultDiv.innerHTML = html;
+            } catch (e) {
+                summaryDiv.innerHTML = '';
+                resultDiv.innerHTML = `<div class="error">JSONパースエラー (JSON Parse Error): ${e.message}</div>`;
+            }
+        }
+
+        function createSummary(diffMap) {
+            const counts = {
+                added: 0,
+                removed: 0,
+                modified: 0
+            };
+            
+            diffMap.forEach((type) => {
+                counts[type]++;
+            });
+            
+            const total = counts.added + counts.removed + counts.modified;
+            
+            if (total === 0) {
+                return '<div class="summary">変更なし (No changes)</div>';
+            }
+            
+            let summaryHtml = '<div class="summary">';
+            if (counts.added > 0) {
+                summaryHtml += `<span class="summary-item"><span class="summary-count">${counts.added}</span> 件の追加 (Added)</span>`;
+            }
+            if (counts.removed > 0) {
+                summaryHtml += `<span class="summary-item"><span class="summary-count">${counts.removed}</span> 件の削除 (Removed)</span>`;
+            }
+            if (counts.modified > 0) {
+                summaryHtml += `<span class="summary-item"><span class="summary-count">${counts.modified}</span> 件の変更 (Modified)</span>`;
+            }
+            summaryHtml += '</div>';
+            
+            return summaryHtml;
+        }
+
+        function createDiffMap(obj1, obj2, path = '') {
+            const diffMap = new Map();
+            
+            // obj1のキーをチェック
+            for (const key in obj1) {
+                const currentPath = path ? `${path}.${key}` : key;
+                
+                if (!(key in obj2)) {
+                    diffMap.set(currentPath, 'removed');
+                } else if (typeof obj1[key] === 'object' && obj1[key] !== null && 
+                          typeof obj2[key] === 'object' && obj2[key] !== null) {
+                    // 両方がオブジェクトの場合、再帰的に比較
+                    if (Array.isArray(obj1[key]) && Array.isArray(obj2[key])) {
+                        // 配列の場合
+                        if (JSON.stringify(obj1[key]) !== JSON.stringify(obj2[key])) {
+                            diffMap.set(currentPath, 'modified');
+                        }
+                    } else {
+                        // オブジェクトの場合
+                        const childDiff = createDiffMap(obj1[key], obj2[key], currentPath);
+                        childDiff.forEach((value, key) => diffMap.set(key, value));
+                    }
+                } else if (obj1[key] !== obj2[key]) {
+                    diffMap.set(currentPath, 'modified');
+                }
+            }
+            
+            // obj2の新しいキーをチェック
+            for (const key in obj2) {
+                if (!(key in obj1)) {
+                    const currentPath = path ? `${path}.${key}` : key;
+                    diffMap.set(currentPath, 'added');
+                }
+            }
+            
+            return diffMap;
+        }
+
+        function renderJSONWithDiff(obj1, obj2, diffMap, path = '', indent = 0) {
+            let html = '';
+            const indentStr = '  '.repeat(indent);
+            const keys = new Set([...Object.keys(obj1 || {}), ...Object.keys(obj2 || {})]);
+            const sortedKeys = Array.from(keys).sort();
+            
+            html += `<div class="diff-line">${indentStr}{</div>\n`;
+            
+            sortedKeys.forEach((key, index) => {
+                const currentPath = path ? `${path}.${key}` : key;
+                const diffType = diffMap.get(currentPath);
+                const isInObj1 = obj1 && key in obj1;
+                const isInObj2 = obj2 && key in obj2;
+                
+                if (isInObj1) {
+                    const value1 = obj1[key];
+                    const value2 = isInObj2 ? obj2[key] : undefined;
+                    
+                    if (typeof value1 === 'object' && value1 !== null && 
+                        typeof value2 === 'object' && value2 !== null &&
+                        !Array.isArray(value1) && !Array.isArray(value2)) {
+                        // オブジェクトの場合
+                        const comma = index < sortedKeys.length - 1 ? ',' : '';
+                        const lineClass = diffType ? `diff-line-${diffType}` : '';
+                        html += `<div class="diff-line ${lineClass}">${indentStr}  <span class="diff-${diffType || 'unchanged'}">"${key}": </span>`;
+                        html += renderJSONWithDiff(value1, value2, diffMap, currentPath, indent + 1);
+                        html += `${comma}</div>\n`;
+                    } else {
+                        // プリミティブ値または配列の場合
+                        const valueStr = JSON.stringify(value1);
+                        const value2Str = isInObj2 ? JSON.stringify(value2) : '';
+                        
+                        const comma = index < sortedKeys.length - 1 ? ',' : '';
+                        const lineClass = diffType === 'modified' ? 'diff-line-modified' : 
+                                        diffType === 'removed' ? 'diff-line-removed' : '';
+                        
+                        if (diffType === 'modified') {
+                            html += `<div class="diff-line ${lineClass}">${indentStr}  <span class="diff-modified">"${key}": ${valueStr} → ${value2Str}</span>${comma}</div>\n`;
+                        } else if (diffType === 'removed') {
+                            html += `<div class="diff-line ${lineClass}">${indentStr}  <span class="diff-removed">"${key}": ${valueStr}</span>${comma}</div>\n`;
+                        } else {
+                            html += `<div class="diff-line">${indentStr}  <span class="diff-unchanged">"${key}": ${valueStr}</span>${comma}</div>\n`;
+                        }
+                    }
+                } else if (isInObj2) {
+                    // obj2にのみ存在（追加）
+                    const value2 = obj2[key];
+                    const valueStr = JSON.stringify(value2);
+                    const comma = index < sortedKeys.length - 1 ? ',' : '';
+                    html += `<div class="diff-line diff-line-added">${indentStr}  <span class="diff-added">"${key}": ${valueStr}</span>${comma}</div>\n`;
+                }
+            });
+            
+            html += `<div class="diff-line">${indentStr}}</div>`;
+            
+            return html;
+        }
+
+        // サンプルデータを入力
+        document.getElementById('json1').value = JSON.stringify({
+            "name": "商品A",
+            "price": 1000,
+            "categories": ["電化製品", "家電"],
+            "stock": {
+                "quantity": 50,
+                "warehouse": "東京"
+            }
+        }, null, 2);
+
+        document.getElementById('json2').value = JSON.stringify({
+            "name": "商品A",
+            "price": 1200,
+            "categories": ["電化製品", "生活家電"],
+            "stock": {
+                "quantity": 30,
+                "warehouse": "大阪"
+            },
+            "discount": 10
+        }, null, 2);
+    </script>
+</body>
+</html>

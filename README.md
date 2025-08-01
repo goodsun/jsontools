@@ -16,6 +16,7 @@ GitHub Pagesでホストされているオンライン版を利用できます�
 - [JSON Formatter](https://goodsun.github.io/jsontools/json-formatter.html) - JSONの整形・加工
 - [JSON Hierarchy Viewer](https://goodsun.github.io/jsontools/json-hierarchy-viewer.html) - 階層構造の可視化
 - [XPath Researcher](https://goodsun.github.io/jsontools/xpath-researcher.html) - XPath抽出テスト
+- [JSON Diff Viewer](https://goodsun.github.io/jsontools/json-diff.html) - JSON差分比較
 
 ## ツール一覧
 
@@ -99,6 +100,30 @@ HTMLソースからXPathを使用して要素を抽出・検証するツール�
 - CORS制約により一部のサイトはURL取得できません
 - その場合はHTMLソースを手動でコピー&ペーストしてください
 
+### 4. JSON Diff Viewer
+**ファイル**: `json-diff.html`
+
+2つのJSONを比較して差分を視覚的に表示するツールです。
+
+#### 主な機能
+- **差分の視覚的表示**: 元のJSON構造を保ちながら差分をハイライト
+- **色分け表示**: 追加（緑）、削除（赤）、変更（黄）で差分を表示
+- **差分サマリー**: 追加・削除・変更の件数を上部に表示
+- **ネスト構造対応**: 深い階層のオブジェクトも正確に比較
+- **変更内容の詳細表示**: 変更前後の値を「旧値 → 新値」形式で表示
+
+#### 使用方法
+1. 左側のテキストエリアに元のJSON（Before）を入力
+2. 右側のテキストエリアに比較するJSON（After）を入力
+3. 「差分を表示 (Show Diff)」ボタンをクリック
+4. 差分結果が色分けされて表示される
+
+#### 表示形式
+- **追加された項目**: 緑色の背景と左側のボーダーで表示
+- **削除された項目**: 赤色の背景と左側のボーダーで表示
+- **変更された項目**: 黄色の背景と左側のボーダーで表示、値は「旧値 → 新値」形式
+- **変更なしの項目**: グレー色のテキストで表示
+
 ## 技術仕様
 
 ### 対応ブラウザ
@@ -141,6 +166,7 @@ jsontools/
 ├── json-formatter.html           # JSON整形ツール
 ├── json-hierarchy-viewer.html    # JSON階層ビューアー
 ├── xpath-researcher.html         # XPath研究ツール
+├── json-diff.html                # JSON差分ビューアー
 ├── docs/
 │   ├── index.md                  # メインページ仕様書
 │   ├── json_formatter.md         # JSON Formatter仕様書
@@ -162,6 +188,7 @@ jsontools/
   - JSON Formatter機能実装
   - JSON Hierarchy Viewer機能実装
   - XPath Researcher機能実装
+  - JSON Diff Viewer機能実装
   - 統一されたUI/UXデザイン
   - インライン編集とリアルタイム更新機能
 
