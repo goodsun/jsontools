@@ -1,0 +1,969 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JSON Builder - Interactive JSON Creator</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        
+        .container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 24px;
+        }
+        
+        .main-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .builder-section, .preview-section {
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 20px;
+            background-color: #f8f9fa;
+            min-height: 400px;
+        }
+        
+        .section-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #333;
+        }
+        
+        .builder-controls {
+            margin-bottom: 20px;
+        }
+        
+        .control-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+            align-items: center;
+        }
+        
+        select, input[type="text"], input[type="number"] {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        
+        input[type="text"] {
+            flex: 1;
+        }
+        
+        button {
+            background-color: #007aff;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+        
+        button:hover {
+            background-color: #0056b3;
+        }
+        
+        .add-button {
+            background-color: #28a745;
+        }
+        
+        .add-button:hover {
+            background-color: #218838;
+        }
+        
+        .remove-button {
+            background-color: #dc3545;
+            padding: 4px 8px;
+            font-size: 12px;
+        }
+        
+        .remove-button:hover {
+            background-color: #c82333;
+        }
+        
+        .clear-button {
+            background-color: #dc3545;
+        }
+        
+        .clear-button:hover {
+            background-color: #c82333;
+        }
+        
+        .json-tree {
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+        
+        .tree-node {
+            margin-left: 20px;
+            position: relative;
+        }
+        
+        .tree-node-root {
+            margin-left: 0;
+        }
+        
+        .node-key {
+            color: #d73a49;
+            font-weight: 600;
+            cursor: pointer;
+            padding: 2px 4px;
+            border-radius: 3px;
+            transition: background-color 0.2s;
+        }
+        
+        .node-key:hover {
+            background-color: #ffe8e8;
+        }
+        
+        .node-value {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .value-input {
+            padding: 4px 8px;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 13px;
+        }
+        
+        .value-type {
+            font-size: 11px;
+            color: #6c757d;
+            padding: 2px 6px;
+            background-color: #e9ecef;
+            border-radius: 3px;
+        }
+        
+        .json-preview {
+            background-color: white;
+            padding: 15px;
+            border-radius: 4px;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        
+        .json-syntax {
+            color: #333;
+        }
+        
+        .json-key {
+            color: #d73a49;
+        }
+        
+        .json-string {
+            color: #032f62;
+        }
+        
+        .json-number {
+            color: #005cc5;
+        }
+        
+        .json-boolean {
+            color: #e36209;
+        }
+        
+        .json-null {
+            color: #6f42c1;
+        }
+        
+        .json-brace {
+            color: #6a737d;
+            font-weight: 600;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .error-message {
+            background-color: #f8d7da;
+            color: #721c24;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 10px;
+            display: none;
+            font-size: 14px;
+        }
+        
+        .success-message {
+            background-color: #d4edda;
+            color: #155724;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 10px;
+            display: none;
+            font-size: 14px;
+        }
+        
+        .header {
+            background-color: #e9ecef;
+            color: #333;
+            padding: 10px 0;
+            margin: -20px -20px 20px -20px;
+            border-radius: 8px 8px 0 0;
+            border-bottom: 1px solid #dee2e6;
+        }
+        
+        .header-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+        }
+        
+        .header-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin: 0;
+        }
+        
+        .nav-link {
+            color: #007aff;
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            font-size: 14px;
+            transition: background-color 0.2s;
+        }
+        
+        .nav-link:hover {
+            background-color: #e9ecef;
+            text-decoration: none;
+            color: #0056b3;
+        }
+        
+        .footer {
+            text-align: center;
+            padding: 20px 0;
+            margin-top: 40px;
+            border-top: 1px solid #e9ecef;
+            color: #6c757d;
+            font-size: 14px;
+        }
+        
+        .footer a {
+            color: #007aff;
+            text-decoration: none;
+        }
+        
+        .footer a:hover {
+            text-decoration: underline;
+        }
+        
+        .collapse-expand {
+            cursor: pointer;
+            user-select: none;
+            margin-right: 5px;
+            color: #6c757d;
+        }
+        
+        .collapsed .tree-node {
+            display: none;
+        }
+        
+        .path-display {
+            font-size: 12px;
+            color: #6c757d;
+            margin-left: 10px;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.4);
+        }
+        
+        .modal-content {
+            background-color: #fefefe;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            border-radius: 8px;
+            width: 500px;
+            max-width: 90%;
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .modal-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin: 0;
+        }
+        
+        .close {
+            color: #aaa;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            line-height: 20px;
+        }
+        
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+        }
+        
+        .modal-body {
+            margin-bottom: 20px;
+        }
+        
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <nav class="header-nav">
+                <h1 class="header-title">JSON Builder</h1>
+                <a href="index.html" class="nav-link">← メニューに戻る</a>
+            </nav>
+        </header>
+        
+        <div class="builder-controls">
+            <div class="control-group">
+                <input type="text" id="keyInput" placeholder="キー名（オブジェクトの場合）">
+                <select id="typeSelect" onchange="updateValueInputVisibility()">
+                    <option value="string">文字列</option>
+                    <option value="number">数値</option>
+                    <option value="boolean">真偽値</option>
+                    <option value="null">null</option>
+                    <option value="object">オブジェクト</option>
+                    <option value="array">配列</option>
+                </select>
+                <input type="text" id="valueInput" placeholder="値">
+                <button class="add-button" onclick="addToRoot()">ルートに追加</button>
+            </div>
+            <div class="control-group">
+                <span class="path-display" id="currentPath">現在の位置: ルート</span>
+            </div>
+            <div class="help-text" id="helpText" style="font-size: 12px; color: #6c757d; margin-top: 5px;">
+                オブジェクトや配列を選択した場合、値入力は不要です。追加後に「追加」ボタンで要素を追加できます。
+            </div>
+        </div>
+        
+        <div class="main-layout">
+            <div class="builder-section">
+                <h2 class="section-title">構造ビルダー</h2>
+                <div id="jsonTree" class="json-tree">
+                    <div class="tree-node tree-node-root" data-path="">
+                        <span class="node-key">ルート</span>
+                        <span class="value-type">object</span>
+                        <button class="add-button" onclick="showAddDialog('')">追加</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="preview-section">
+                <h2 class="section-title">JSONプレビュー</h2>
+                <div id="jsonPreview" class="json-preview">{}</div>
+            </div>
+        </div>
+        
+        <div class="action-buttons">
+            <button onclick="copyJSON()">JSONをコピー</button>
+            <button onclick="downloadJSON()">JSONをダウンロード</button>
+            <button onclick="importJSON()">JSONをインポート</button>
+            <button class="clear-button" onclick="clearAll()">すべてクリア</button>
+        </div>
+        
+        <textarea id="importInput" style="display: none;" placeholder="インポートするJSONを貼り付けてください..."></textarea>
+        
+        <div id="errorMessage" class="error-message"></div>
+        <div id="successMessage" class="success-message"></div>
+        
+        <footer class="footer">
+            Copyright 2025 <a href="https://github.com/goodsun/jsontools" target="_blank">goodsun</a> all rights reserved
+        </footer>
+    </div>
+
+    <!-- モーダルダイアログ -->
+    <div id="addModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">要素を追加</h3>
+                <span class="close" onclick="closeModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="control-group">
+                    <input type="text" id="modalKeyInput" placeholder="キー名（オブジェクトの場合必須）">
+                    <select id="modalTypeSelect" onchange="updateModalValueInput()">
+                        <option value="string">文字列</option>
+                        <option value="number">数値</option>
+                        <option value="boolean">真偽値</option>
+                        <option value="null">null</option>
+                        <option value="object">オブジェクト</option>
+                        <option value="array">配列</option>
+                    </select>
+                    <input type="text" id="modalValueInput" placeholder="値">
+                </div>
+                <div class="help-text" id="modalHelpText" style="display: none; font-size: 12px; color: #6c757d; margin-top: 5px;">
+                    オブジェクトや配列を選択した場合、値入力は不要です。
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button onclick="closeModal()">キャンセル</button>
+                <button class="add-button" onclick="addFromModal()">追加</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let jsonData = {};
+        let currentPath = '';
+        let currentAddPath = '';
+        
+        function updatePreview() {
+            const preview = document.getElementById('jsonPreview');
+            preview.textContent = JSON.stringify(jsonData, null, 2);
+            highlightJSON(preview);
+        }
+        
+        function highlightJSON(element) {
+            let html = element.textContent;
+            html = html.replace(/"([^"]+)":/g, '<span class="json-key">"$1"</span>:');
+            html = html.replace(/: "([^"]*)"/g, ': <span class="json-string">"$1"</span>');
+            html = html.replace(/: (\d+)/g, ': <span class="json-number">$1</span>');
+            html = html.replace(/: (true|false)/g, ': <span class="json-boolean">$1</span>');
+            html = html.replace(/: null/g, ': <span class="json-null">null</span>');
+            html = html.replace(/([{}[\]])/g, '<span class="json-brace">$1</span>');
+            element.innerHTML = html;
+        }
+        
+        function addToRoot() {
+            const key = document.getElementById('keyInput').value;
+            const type = document.getElementById('typeSelect').value;
+            const valueInput = document.getElementById('valueInput').value;
+            
+            if (!key) {
+                showError('キー名を入力してください');
+                return;
+            }
+            
+            let value;
+            switch (type) {
+                case 'string':
+                    value = valueInput;
+                    break;
+                case 'number':
+                    value = Number(valueInput) || 0;
+                    break;
+                case 'boolean':
+                    value = valueInput.toLowerCase() === 'true';
+                    break;
+                case 'null':
+                    value = null;
+                    break;
+                case 'object':
+                    value = {};
+                    break;
+                case 'array':
+                    value = [];
+                    break;
+            }
+            
+            jsonData[key] = value;
+            rebuildTree();
+            updatePreview();
+            clearInputs();
+        }
+        
+        function addToNode(path) {
+            const key = document.getElementById('keyInput').value;
+            const type = document.getElementById('typeSelect').value;
+            const valueInput = document.getElementById('valueInput').value;
+            
+            const target = getValueByPath(jsonData, path);
+            
+            if (Array.isArray(target)) {
+                let value;
+                switch (type) {
+                    case 'string':
+                        value = valueInput;
+                        break;
+                    case 'number':
+                        value = Number(valueInput) || 0;
+                        break;
+                    case 'boolean':
+                        value = valueInput.toLowerCase() === 'true';
+                        break;
+                    case 'null':
+                        value = null;
+                        break;
+                    case 'object':
+                        value = {};
+                        break;
+                    case 'array':
+                        value = [];
+                        break;
+                }
+                target.push(value);
+            } else if (typeof target === 'object' && target !== null) {
+                if (!key) {
+                    showError('オブジェクトに追加する場合はキー名が必要です');
+                    return;
+                }
+                
+                let value;
+                switch (type) {
+                    case 'string':
+                        value = valueInput;
+                        break;
+                    case 'number':
+                        value = Number(valueInput) || 0;
+                        break;
+                    case 'boolean':
+                        value = valueInput.toLowerCase() === 'true';
+                        break;
+                    case 'null':
+                        value = null;
+                        break;
+                    case 'object':
+                        value = {};
+                        break;
+                    case 'array':
+                        value = [];
+                        break;
+                }
+                target[key] = value;
+            }
+            
+            rebuildTree();
+            updatePreview();
+            clearInputs();
+        }
+        
+        function removeNode(path) {
+            const parts = path.split('.');
+            const key = parts.pop();
+            const parentPath = parts.join('.');
+            
+            if (parentPath === '') {
+                delete jsonData[key];
+            } else {
+                const parent = getValueByPath(jsonData, parentPath);
+                if (Array.isArray(parent)) {
+                    parent.splice(parseInt(key), 1);
+                } else {
+                    delete parent[key];
+                }
+            }
+            
+            rebuildTree();
+            updatePreview();
+        }
+        
+        function getValueByPath(obj, path) {
+            if (path === '') return obj;
+            return path.split('.').reduce((acc, key) => acc[key], obj);
+        }
+        
+        function rebuildTree() {
+            const tree = document.getElementById('jsonTree');
+            tree.innerHTML = '';
+            
+            const rootNode = document.createElement('div');
+            rootNode.className = 'tree-node tree-node-root';
+            rootNode.setAttribute('data-path', '');
+            rootNode.innerHTML = `
+                <span class="node-key">ルート</span>
+                <span class="value-type">object</span>
+                <button class="add-button" onclick="showAddDialog('')">追加</button>
+            `;
+            tree.appendChild(rootNode);
+            
+            buildTreeNode(jsonData, rootNode, '');
+        }
+        
+        function buildTreeNode(data, parentElement, parentPath) {
+            if (Array.isArray(data)) {
+                data.forEach((value, index) => {
+                    const currentPath = parentPath ? `${parentPath}.${index}` : String(index);
+                    const node = document.createElement('div');
+                    node.className = 'tree-node';
+                    node.setAttribute('data-path', currentPath);
+                    
+                    let nodeContent = `<span class="node-key">[${index}]:</span> `;
+                    
+                    if (value === null) {
+                        nodeContent += `<span class="value-type">null</span>`;
+                    } else if (Array.isArray(value)) {
+                        nodeContent += `<span class="value-type">array[${value.length}]</span>`;
+                        nodeContent += `<button class="add-button" onclick="showAddDialog('${currentPath}')">追加</button>`;
+                    } else if (typeof value === 'object') {
+                        nodeContent += `<span class="value-type">object</span>`;
+                        nodeContent += `<button class="add-button" onclick="showAddDialog('${currentPath}')">追加</button>`;
+                    } else if (typeof value === 'string') {
+                        nodeContent += `<input type="text" class="value-input" value="${value}" onchange="updateValue('${currentPath}', this.value, 'string')">`;
+                        nodeContent += `<span class="value-type">string</span>`;
+                    } else if (typeof value === 'number') {
+                        nodeContent += `<input type="number" class="value-input" value="${value}" onchange="updateValue('${currentPath}', this.value, 'number')">`;
+                        nodeContent += `<span class="value-type">number</span>`;
+                    } else if (typeof value === 'boolean') {
+                        nodeContent += `<select class="value-input" onchange="updateValue('${currentPath}', this.value, 'boolean')">
+                            <option value="true" ${value ? 'selected' : ''}>true</option>
+                            <option value="false" ${!value ? 'selected' : ''}>false</option>
+                        </select>`;
+                        nodeContent += `<span class="value-type">boolean</span>`;
+                    }
+                    
+                    nodeContent += ` <button class="remove-button" onclick="removeNode('${currentPath}')">削除</button>`;
+                    
+                    node.innerHTML = nodeContent;
+                    parentElement.appendChild(node);
+                    
+                    if (typeof value === 'object' && value !== null) {
+                        buildTreeNode(value, node, currentPath);
+                    }
+                });
+            } else if (typeof data === 'object' && data !== null) {
+                Object.entries(data).forEach(([key, value]) => {
+                    const currentPath = parentPath ? `${parentPath}.${key}` : key;
+                    const node = document.createElement('div');
+                    node.className = 'tree-node';
+                    node.setAttribute('data-path', currentPath);
+                    
+                    let nodeContent = `<span class="node-key">${key}:</span> `;
+                    
+                    if (value === null) {
+                        nodeContent += `<span class="value-type">null</span>`;
+                    } else if (Array.isArray(value)) {
+                        nodeContent += `<span class="value-type">array[${value.length}]</span>`;
+                        nodeContent += `<button class="add-button" onclick="showAddDialog('${currentPath}')">追加</button>`;
+                    } else if (typeof value === 'object') {
+                        nodeContent += `<span class="value-type">object</span>`;
+                        nodeContent += `<button class="add-button" onclick="showAddDialog('${currentPath}')">追加</button>`;
+                    } else if (typeof value === 'string') {
+                        nodeContent += `<input type="text" class="value-input" value="${value}" onchange="updateValue('${currentPath}', this.value, 'string')">`;
+                        nodeContent += `<span class="value-type">string</span>`;
+                    } else if (typeof value === 'number') {
+                        nodeContent += `<input type="number" class="value-input" value="${value}" onchange="updateValue('${currentPath}', this.value, 'number')">`;
+                        nodeContent += `<span class="value-type">number</span>`;
+                    } else if (typeof value === 'boolean') {
+                        nodeContent += `<select class="value-input" onchange="updateValue('${currentPath}', this.value, 'boolean')">
+                            <option value="true" ${value ? 'selected' : ''}>true</option>
+                            <option value="false" ${!value ? 'selected' : ''}>false</option>
+                        </select>`;
+                        nodeContent += `<span class="value-type">boolean</span>`;
+                    }
+                    
+                    nodeContent += ` <button class="remove-button" onclick="removeNode('${currentPath}')">削除</button>`;
+                    
+                    node.innerHTML = nodeContent;
+                    parentElement.appendChild(node);
+                    
+                    if (typeof value === 'object' && value !== null) {
+                        buildTreeNode(value, node, currentPath);
+                    }
+                });
+            }
+        }
+        
+        function updateValue(path, value, type) {
+            const parts = path.split('.');
+            let current = jsonData;
+            
+            for (let i = 0; i < parts.length - 1; i++) {
+                current = current[parts[i]];
+            }
+            
+            const key = parts[parts.length - 1];
+            
+            switch (type) {
+                case 'string':
+                    current[key] = value;
+                    break;
+                case 'number':
+                    current[key] = Number(value);
+                    break;
+                case 'boolean':
+                    current[key] = value === 'true';
+                    break;
+            }
+            
+            updatePreview();
+        }
+        
+        function clearInputs() {
+            document.getElementById('keyInput').value = '';
+            document.getElementById('valueInput').value = '';
+            document.getElementById('typeSelect').selectedIndex = 0;
+        }
+        
+        function copyJSON() {
+            const jsonString = JSON.stringify(jsonData, null, 2);
+            navigator.clipboard.writeText(jsonString).then(() => {
+                showSuccess('JSONをクリップボードにコピーしました');
+            }).catch(() => {
+                showError('コピーに失敗しました');
+            });
+        }
+        
+        function downloadJSON() {
+            const jsonString = JSON.stringify(jsonData, null, 2);
+            const blob = new Blob([jsonString], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'data.json';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showSuccess('JSONをダウンロードしました');
+        }
+        
+        function importJSON() {
+            const importInput = document.getElementById('importInput');
+            if (importInput.style.display === 'none') {
+                importInput.style.display = 'block';
+                importInput.style.width = '100%';
+                importInput.style.height = '150px';
+                importInput.style.marginTop = '10px';
+                importInput.focus();
+                
+                importInput.onblur = function() {
+                    if (importInput.value.trim()) {
+                        try {
+                            jsonData = JSON.parse(importInput.value);
+                            rebuildTree();
+                            updatePreview();
+                            showSuccess('JSONをインポートしました');
+                            importInput.value = '';
+                            importInput.style.display = 'none';
+                        } catch (e) {
+                            showError('無効なJSON形式です: ' + e.message);
+                        }
+                    } else {
+                        importInput.style.display = 'none';
+                    }
+                };
+            }
+        }
+        
+        function clearAll() {
+            if (confirm('すべてのデータをクリアしますか？')) {
+                jsonData = {};
+                rebuildTree();
+                updatePreview();
+                showSuccess('すべてクリアしました');
+            }
+        }
+        
+        function showError(message) {
+            const errorDiv = document.getElementById('errorMessage');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+            setTimeout(() => {
+                errorDiv.style.display = 'none';
+            }, 3000);
+        }
+        
+        function showSuccess(message) {
+            const successDiv = document.getElementById('successMessage');
+            successDiv.textContent = message;
+            successDiv.style.display = 'block';
+            setTimeout(() => {
+                successDiv.style.display = 'none';
+            }, 3000);
+        }
+        
+        function updateValueInputVisibility() {
+            const type = document.getElementById('typeSelect').value;
+            const valueInput = document.getElementById('valueInput');
+            const helpText = document.getElementById('helpText');
+            
+            if (type === 'object' || type === 'array') {
+                valueInput.style.display = 'none';
+                valueInput.value = '';
+                helpText.style.display = 'block';
+            } else {
+                valueInput.style.display = 'block';
+                helpText.style.display = 'none';
+            }
+        }
+        
+        // キーボードショートカット
+        document.addEventListener('keydown', function(e) {
+            if (e.ctrlKey && e.key === 'Enter') {
+                const keyInput = document.getElementById('keyInput');
+                const valueInput = document.getElementById('valueInput');
+                if (keyInput === document.activeElement || valueInput === document.activeElement) {
+                    addToRoot();
+                }
+            }
+        });
+        
+        function showAddDialog(path) {
+            currentAddPath = path;
+            const modal = document.getElementById('addModal');
+            modal.style.display = 'block';
+            
+            // パスに基づいて対象を判定
+            const target = path === '' ? jsonData : getValueByPath(jsonData, path);
+            const isArray = Array.isArray(target);
+            
+            // 配列の場合はキー入力を無効化
+            const keyInput = document.getElementById('modalKeyInput');
+            if (isArray) {
+                keyInput.style.display = 'none';
+                keyInput.value = '';
+            } else {
+                keyInput.style.display = 'block';
+            }
+            
+            // 初期化
+            document.getElementById('modalTypeSelect').selectedIndex = 0;
+            document.getElementById('modalValueInput').value = '';
+            updateModalValueInput();
+        }
+        
+        function closeModal() {
+            const modal = document.getElementById('addModal');
+            modal.style.display = 'none';
+            document.getElementById('modalKeyInput').value = '';
+            document.getElementById('modalValueInput').value = '';
+        }
+        
+        function updateModalValueInput() {
+            const type = document.getElementById('modalTypeSelect').value;
+            const valueInput = document.getElementById('modalValueInput');
+            const helpText = document.getElementById('modalHelpText');
+            
+            if (type === 'object' || type === 'array') {
+                valueInput.style.display = 'none';
+                valueInput.value = '';
+                helpText.style.display = 'block';
+            } else {
+                valueInput.style.display = 'block';
+                helpText.style.display = 'none';
+            }
+        }
+        
+        function addFromModal() {
+            const key = document.getElementById('modalKeyInput').value;
+            const type = document.getElementById('modalTypeSelect').value;
+            const valueInput = document.getElementById('modalValueInput').value;
+            
+            const target = currentAddPath === '' ? jsonData : getValueByPath(jsonData, currentAddPath);
+            
+            if (Array.isArray(target)) {
+                let value;
+                switch (type) {
+                    case 'string':
+                        value = valueInput;
+                        break;
+                    case 'number':
+                        value = Number(valueInput) || 0;
+                        break;
+                    case 'boolean':
+                        value = valueInput.toLowerCase() === 'true';
+                        break;
+                    case 'null':
+                        value = null;
+                        break;
+                    case 'object':
+                        value = {};
+                        break;
+                    case 'array':
+                        value = [];
+                        break;
+                }
+                target.push(value);
+            } else if (typeof target === 'object' && target !== null) {
+                if (!key) {
+                    showError('オブジェクトに追加する場合はキー名が必要です');
+                    return;
+                }
+                
+                let value;
+                switch (type) {
+                    case 'string':
+                        value = valueInput;
+                        break;
+                    case 'number':
+                        value = Number(valueInput) || 0;
+                        break;
+                    case 'boolean':
+                        value = valueInput.toLowerCase() === 'true';
+                        break;
+                    case 'null':
+                        value = null;
+                        break;
+                    case 'object':
+                        value = {};
+                        break;
+                    case 'array':
+                        value = [];
+                        break;
+                }
+                target[key] = value;
+            }
+            
+            closeModal();
+            rebuildTree();
+            updatePreview();
+        }
+        
+        // モーダル外クリックで閉じる
+        window.onclick = function(event) {
+            const modal = document.getElementById('addModal');
+            if (event.target == modal) {
+                closeModal();
+            }
+        }
+        
+        // 初期表示
+        updatePreview();
+        updateValueInputVisibility();
+    </script>
+</body>
+</html>
