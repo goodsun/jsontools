@@ -311,6 +311,16 @@
           「XPath抽出実行」ボタンをクリックすると、各XPathで取得できる値が表示されます
         </p>
         <p>4. 結果の値をクリックするとクリップボードにコピーされます</p>
+        <p style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #bbdefb;">
+          <strong>GETパラメータ対応:</strong>
+          URLパラメータで初期値を指定できます。<br>
+          <code style="background: #e8f0fe; padding: 2px 6px; border-radius: 3px; font-size: 12px;">
+            ?url=https://example.com&amp;xpath={"title":"//title","links":"//a/@href"}
+          </code><br>
+          <span style="font-size: 12px; color: #6c757d;">
+            ※ <code>url</code>のみ → HTML自動取得、両方指定 → 取得後にXPath抽出まで自動実行
+          </span>
+        </p>
       </div>
 
       <div class="url-section" style="margin-bottom: 20px">
