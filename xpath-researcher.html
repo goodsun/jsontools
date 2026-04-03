@@ -873,6 +873,42 @@
         document.getElementById("successMessage").style.display = "none";
       }
 
+      // GETパラメータからURL・XPath設定を読み込み
+      function loadFromQueryParams() {
+        const params = new URLSearchParams(window.location.search);
+        const url = params.get("url");
+        const xpath = params.get("xpath");
+
+        if (url) {
+          document.getElementById("urlInput").value = url;
+        }
+
+        if (xpath) {
+          try {
+            // JSON として有効か検証してから整形してセット
+            const parsed = JSON.parse(xpath);
+            document.getElementById("xpathInput").value = JSON.stringify(parsed, null, 4);
+          } catch (e) {
+            // JSON でなければそのままセット
+            document.getElementById("xpathInput").value = xpath;
+          }
+        }
+
+        // URLとXPath両方ある場合はHTML取得後に自動実行
+        if (url && xpath) {
+          fetchHTML().then(() => {
+            if (document.getElementById("htmlInput").value.trim()) {
+              executeXPath();
+            }
+          });
+        } else if (url) {
+          fetchHTML();
+        }
+      }
+
+      // ページ読み込み時に実行
+      loadFromQueryParams();
+
       // Ctrl+Enterで実行
       document.addEventListener("keydown", function (e) {
         if (e.ctrlKey && e.key === "Enter") {
