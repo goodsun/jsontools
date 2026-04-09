@@ -461,6 +461,59 @@
       let currentXPathConfig = {};
       let updateTimeout = null;
 
+      function decodeHTML(arrayBuffer) {
+        const bytes = new Uint8Array(arrayBuffer);
+
+        // BOM検出
+        if (bytes[0] === 0xEF && bytes[1] === 0xBB && bytes[2] === 0xBF) {
+          return new TextDecoder("utf-8").decode(arrayBuffer);
+        }
+
+        // 先頭部分をASCIIとして読み、meta charsetを探す
+        const preview = new TextDecoder("ascii", { fatal: false }).decode(
+          arrayBuffer.slice(0, 4096)
+        );
+
+        let charset = null;
+
+        // <meta charset="xxx">
+        const m1 = preview.match(/<meta[^>]+charset=["']?([^"';\s>]+)/i);
+        if (m1) charset = m1[1].trim().toLowerCase();
+
+        // <meta http-equiv="Content-Type" content="text/html; charset=xxx">
+        if (!charset) {
+          const m2 = preview.match(
+            /<meta[^>]+content=["'][^"']*charset=([^"';\s]+)/i
+          );
+          if (m2) charset = m2[1].trim().toLowerCase();
+        }
+
+        // <?xml ... encoding="xxx" ?>
+        if (!charset) {
+          const m3 = preview.match(/<\?xml[^>]+encoding=["']([^"']+)/i);
+          if (m3) charset = m3[1].trim().toLowerCase();
+        }
+
+        if (charset && charset !== "utf-8") {
+          // 一般的なエイリアスを正規化
+          const aliases = {
+            "shift_jis": "shift_jis", "shift-jis": "shift_jis",
+            "sjis": "shift_jis", "x-sjis": "shift_jis", "ms_kanji": "shift_jis",
+            "euc_jp": "euc-jp", "euc-kr": "euc-kr",
+            "gb2312": "gb18030", "gbk": "gb18030",
+            "latin1": "iso-8859-1", "windows-1252": "windows-1252",
+          };
+          const encoding = aliases[charset] || charset;
+          try {
+            return new TextDecoder(encoding).decode(arrayBuffer);
+          } catch (_) {
+            // 未知のエンコーディング → UTF-8にフォールバック
+          }
+        }
+
+        return new TextDecoder("utf-8").decode(arrayBuffer);
+      }
+
       function showLoading() {
         document.getElementById("loadingOverlay").classList.add("active");
       }
@@ -511,7 +564,8 @@
                     break;
                   }
                 } else {
-                  htmlContent = await response.text();
+                  const buf = await response.arrayBuffer();
+                  htmlContent = decodeHTML(buf);
                   break;
                 }
               }
