@@ -345,6 +345,14 @@
         background-color: #f8d7da !important;
       }
 
+      .result-row-caution {
+        background-color: #fff3cd !important;
+      }
+
+      .result-row-caution td {
+        background-color: #fff3cd !important;
+      }
+
       @media (max-width: 768px) {
         .input-section {
           grid-template-columns: 1fr;
@@ -736,13 +744,14 @@
 
           const isEmpty = values.length === 0 || !xpath.trim();
           const results = isEmpty ? ["(該当なし)"] : values;
-          const isRequiredWarning = isEmpty && REQUIRED_KEYS.includes(key);
-          addResultRow(key, xpath, results, false, isRequiredWarning);
+          const isRequired = REQUIRED_KEYS.includes(key);
+          const rowStyle = isEmpty ? (isRequired ? "warning" : "caution") : null;
+          addResultRow(key, xpath, results, false, rowStyle);
           return isEmpty;
         } catch (xpathError) {
           const results = [`XPathエラー: ${xpathError.message}`];
-          const isRequiredWarning = REQUIRED_KEYS.includes(key);
-          addResultRow(key, xpath, results, true, isRequiredWarning);
+          const isRequired = REQUIRED_KEYS.includes(key);
+          addResultRow(key, xpath, results, true, isRequired ? "warning" : "caution");
           return true;
         }
       }
@@ -789,17 +798,17 @@
             const results = isEmpty ? ["(該当なし)"] : values;
             updateResultCell(resultCell, results, false);
 
-            // 必須キーの場合、行の警告スタイルを更新
-            if (REQUIRED_KEYS.includes(key)) {
-              row.classList.toggle("result-row-warning", isEmpty);
+            // 行の警告・注意スタイルを更新
+            row.classList.remove("result-row-warning", "result-row-caution");
+            if (isEmpty) {
+              row.classList.add(REQUIRED_KEYS.includes(key) ? "result-row-warning" : "result-row-caution");
             }
           } catch (xpathError) {
             const results = [`XPathエラー: ${xpathError.message}`];
             updateResultCell(resultCell, results, true);
 
-            if (REQUIRED_KEYS.includes(key)) {
-              row.classList.add("result-row-warning");
-            }
+            row.classList.remove("result-row-warning", "result-row-caution");
+            row.classList.add(REQUIRED_KEYS.includes(key) ? "result-row-warning" : "result-row-caution");
           }
         }
       }
@@ -838,12 +847,14 @@
         }
       }
 
-      function addResultRow(key, xpath, values, isError = false, isWarning = false) {
+      function addResultRow(key, xpath, values, isError = false, rowStyle = null) {
         const tbody = document.getElementById("resultsBody");
         const row = document.createElement("tr");
 
-        if (isWarning) {
+        if (rowStyle === "warning") {
           row.classList.add("result-row-warning");
+        } else if (rowStyle === "caution") {
+          row.classList.add("result-row-caution");
         }
 
         // キー列
