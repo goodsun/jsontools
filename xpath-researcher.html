@@ -321,6 +321,30 @@
         to { transform: rotate(360deg); }
       }
 
+      .warning-message {
+        background-color: #fff3cd;
+        color: #856404;
+        padding: 10px;
+        border-radius: 4px;
+        margin-top: 10px;
+        display: none;
+        font-size: 14px;
+        border: 1px solid #ffc107;
+      }
+
+      .xpath-input-warning {
+        border: 2px solid #dc3545 !important;
+        background-color: #fff5f5 !important;
+      }
+
+      .result-row-warning {
+        background-color: #f8d7da !important;
+      }
+
+      .result-row-warning td {
+        background-color: #f8d7da !important;
+      }
+
       @media (max-width: 768px) {
         .input-section {
           grid-template-columns: 1fr;
@@ -421,6 +445,7 @@
       </div>
 
       <div id="errorMessage" class="error-message"></div>
+      <div id="warningMessage" class="warning-message"></div>
       <div id="successMessage" class="success-message"></div>
 
       <div class="results-section">
@@ -460,6 +485,8 @@
       let currentDocument = null;
       let currentXPathConfig = {};
       let updateTimeout = null;
+
+      const REQUIRED_KEYS = ["contract", "license", "occupation"];
 
       function decodeHTML(arrayBuffer) {
         const bytes = new Uint8Array(arrayBuffer);
@@ -628,6 +655,19 @@
           // XPath設定をパース
           currentXPathConfig = JSON.parse(xpathInput);
 
+          // 必須キーの存在チェック
+          const missingKeys = REQUIRED_KEYS.filter(
+            (k) => !(k in currentXPathConfig)
+          );
+          if (missingKeys.length > 0) {
+            document
+              .getElementById("xpathInput")
+              .classList.add("xpath-input-warning");
+            showWarning(
+              `必須キーが未設定です: ${missingKeys.join(", ")}`
+            );
+          }
+
           // HTMLをパース
           const parser = new DOMParser();
           currentDocument = parser.parseFromString(htmlInput, "text/html");
@@ -636,8 +676,23 @@
           resultsBody.innerHTML = "";
 
           // 各XPathを実行
+          const emptyRequiredKeys = [];
           for (const [key, xpath] of Object.entries(currentXPathConfig)) {
-            executeAndDisplayXPath(key, xpath);
+            const isEmpty = executeAndDisplayXPath(key, xpath);
+            if (isEmpty && REQUIRED_KEYS.includes(key)) {
+              emptyRequiredKeys.push(key);
+            }
+          }
+
+          // 抽出できなかった必須キーの警告
+          if (emptyRequiredKeys.length > 0 && missingKeys.length === 0) {
+            showWarning(
+              `必須キーの値が取得できませんでした: ${emptyRequiredKeys.join(", ")}`
+            );
+          } else if (emptyRequiredKeys.length > 0 && missingKeys.length > 0) {
+            showWarning(
+              `必須キーが未設定です: ${missingKeys.join(", ")} / 値が取得できませんでした: ${emptyRequiredKeys.join(", ")}`
+            );
           }
 
           // 結果を表示
@@ -679,11 +734,16 @@
             node = xpathResult.iterateNext();
           }
 
-          const results = values.length > 0 ? values : ["(該当なし)"];
-          addResultRow(key, xpath, results);
+          const isEmpty = values.length === 0 || !xpath.trim();
+          const results = isEmpty ? ["(該当なし)"] : values;
+          const isRequiredWarning = isEmpty && REQUIRED_KEYS.includes(key);
+          addResultRow(key, xpath, results, false, isRequiredWarning);
+          return isEmpty;
         } catch (xpathError) {
           const results = [`XPathエラー: ${xpathError.message}`];
-          addResultRow(key, xpath, results, true);
+          const isRequiredWarning = REQUIRED_KEYS.includes(key);
+          addResultRow(key, xpath, results, true, isRequiredWarning);
+          return true;
         }
       }
 
@@ -725,11 +785,21 @@
               node = xpathResult.iterateNext();
             }
 
-            const results = values.length > 0 ? values : ["(該当なし)"];
+            const isEmpty = values.length === 0 || !newXPath.trim();
+            const results = isEmpty ? ["(該当なし)"] : values;
             updateResultCell(resultCell, results, false);
+
+            // 必須キーの場合、行の警告スタイルを更新
+            if (REQUIRED_KEYS.includes(key)) {
+              row.classList.toggle("result-row-warning", isEmpty);
+            }
           } catch (xpathError) {
             const results = [`XPathエラー: ${xpathError.message}`];
             updateResultCell(resultCell, results, true);
+
+            if (REQUIRED_KEYS.includes(key)) {
+              row.classList.add("result-row-warning");
+            }
           }
         }
       }
@@ -768,9 +838,13 @@
         }
       }
 
-      function addResultRow(key, xpath, values, isError = false) {
+      function addResultRow(key, xpath, values, isError = false, isWarning = false) {
         const tbody = document.getElementById("resultsBody");
         const row = document.createElement("tr");
+
+        if (isWarning) {
+          row.classList.add("result-row-warning");
+        }
 
         // キー列
         const keyCell = document.createElement("td");
@@ -985,9 +1059,17 @@
         successDiv.style.display = "block";
       }
 
+      function showWarning(message) {
+        const warningDiv = document.getElementById("warningMessage");
+        warningDiv.textContent = message;
+        warningDiv.style.display = "block";
+      }
+
       function hideMessages() {
         document.getElementById("errorMessage").style.display = "none";
+        document.getElementById("warningMessage").style.display = "none";
         document.getElementById("successMessage").style.display = "none";
+        document.getElementById("xpathInput").classList.remove("xpath-input-warning");
       }
 
       // GETパラメータからURL・XPath設定を読み込み
