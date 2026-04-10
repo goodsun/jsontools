@@ -501,7 +501,7 @@
 
         // BOM検出
         if (bytes[0] === 0xEF && bytes[1] === 0xBB && bytes[2] === 0xBF) {
-          return new TextDecoder("utf-8").decode(arrayBuffer);
+          return { text: new TextDecoder("utf-8").decode(arrayBuffer), encoding: null };
         }
 
         // 先頭部分をASCIIとして読み、meta charsetを探す
@@ -540,13 +540,29 @@
           };
           const encoding = aliases[charset] || charset;
           try {
-            return new TextDecoder(encoding).decode(arrayBuffer);
+            return { text: new TextDecoder(encoding).decode(arrayBuffer), encoding: charset };
           } catch (_) {
             // 未知のエンコーディング → UTF-8にフォールバック
           }
         }
 
-        return new TextDecoder("utf-8").decode(arrayBuffer);
+        return { text: new TextDecoder("utf-8").decode(arrayBuffer), encoding: null };
+      }
+
+      function detectCharsetFromString(html) {
+        const preview = html.slice(0, 4096);
+        let charset = null;
+        const m1 = preview.match(/<meta[^>]+charset=["']?([^"';\s>]+)/i);
+        if (m1) charset = m1[1].trim().toLowerCase();
+        if (!charset) {
+          const m2 = preview.match(/<meta[^>]+content=["'][^"']*charset=([^"';\s]+)/i);
+          if (m2) charset = m2[1].trim().toLowerCase();
+        }
+        if (!charset) {
+          const m3 = preview.match(/<\?xml[^>]+encoding=["']([^"']+)/i);
+          if (m3) charset = m3[1].trim().toLowerCase();
+        }
+        return (charset && charset !== "utf-8") ? charset : null;
       }
 
       function showLoading() {
@@ -585,6 +601,7 @@
           ];
 
           let htmlContent = null;
+          let detectedEncoding = null;
           let lastError = null;
 
           for (const proxyUrl of proxyUrls) {
@@ -596,11 +613,14 @@
                   const data = await response.json();
                   if (data.contents) {
                     htmlContent = data.contents;
+                    detectedEncoding = detectCharsetFromString(htmlContent);
                     break;
                   }
                 } else {
                   const buf = await response.arrayBuffer();
-                  htmlContent = decodeHTML(buf);
+                  const result = decodeHTML(buf);
+                  htmlContent = result.text;
+                  detectedEncoding = result.encoding;
                   break;
                 }
               }
@@ -612,7 +632,10 @@
 
           if (htmlContent) {
             htmlTextarea.value = htmlContent;
-            showSuccess(`HTMLを取得しました (${url.hostname})`);
+            const encodingNote = detectedEncoding
+              ? ` / 元エンコード: ${detectedEncoding} → UTF-8に変換`
+              : "";
+            showSuccess(`HTMLを取得しました (${url.hostname}${encodingNote})`);
           } else {
             throw (
               lastError ||
