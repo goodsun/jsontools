@@ -613,7 +613,19 @@
                   const data = await response.json();
                   if (data.contents) {
                     htmlContent = data.contents;
-                    detectedEncoding = detectCharsetFromString(htmlContent);
+                    // alloriginsのstatus.content_typeからcharsetを検出
+                    const ct = data.status && data.status.content_type;
+                    if (ct) {
+                      const ctMatch = ct.match(/charset=([^;\s]+)/i);
+                      if (ctMatch) {
+                        const cs = ctMatch[1].trim().toLowerCase();
+                        if (cs !== "utf-8") detectedEncoding = cs;
+                      }
+                    }
+                    // Content-Typeで見つからなければHTMLソースから検出
+                    if (!detectedEncoding) {
+                      detectedEncoding = detectCharsetFromString(htmlContent);
+                    }
                     break;
                   }
                 } else {
